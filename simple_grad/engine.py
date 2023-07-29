@@ -44,12 +44,56 @@ class Value:
         out.backward = backward
         return out
 
-    def backprop(self):
-        self.gradient = 1
-        self._backward_recursion()
+    def relu(self):
+        out = Value(max(0, self.data), (self))
 
-    def _backward_recursion(self):
+        def backward():
+            self.grad += (out.data > 0) * out.grad
+
+        out.backward = backward
+
+        return out
+
+    def sigmoid(self):
+        out = Value(1 / (np.exp(-1) + 1), (self))
+
+        def backward():
+            self.grad += out.data * (1 - out.data)
+
+        out.backward = backward
+
+        return out
+
+    def backprop(self, learning_rate):
+        self.gradient = 1
+        self._backward_recursion(learning_rate)
+
+    def _backward_recursion(self, learning_rate):
         self.backward()
+        self.data -= self.gradient * learning_rate
         for child in self.children:
-            child.data -= self.gradient
             child._backward_recursion()
+
+    def __neg__(self):
+        return self * -1
+
+    def __radd__(self, other):
+        return self + other
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return other + (-self)
+
+    def __rmul__(self, other):
+        return self * other
+
+    def __truediv__(self, other):
+        return self * other**-1
+
+    def __rtruediv__(self, other):
+        return other * self**-1
+
+    def __repr__(self):
+        return f"Value(data={self.data}, grad={self.grad})"

@@ -1,9 +1,6 @@
 import random
 from .engine import Value
-
-
-def relu(x):
-    return max(0, x)
+import numpy as np
 
 
 class Layer:
@@ -19,8 +16,14 @@ class Layer:
         for i in range(self.output_dim):
             acc = 0
             for j in range(self.input_dim):
-                acc += input[j] * self[i][j]
-            output.append(self.activation(acc))
+                acc += input[j] * self.weights[i][j]
+
+            a = 0
+            if self.activation == "relu":
+                a = acc.relu()
+            else:
+                a = acc.sigmoid()
+            output.append(a)
 
         return output
 
