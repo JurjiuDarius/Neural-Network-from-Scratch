@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Value:
-    def __init__(self, data, children) -> None:
+    def __init__(self, data, children=()) -> None:
         self.data = data
         self.gradient = 0
         self.backward = lambda: None
@@ -45,9 +45,11 @@ class Value:
         return out
 
     def backprop(self):
-        gradient = 1
+        self.gradient = 1
         self._backward_recursion()
 
     def _backward_recursion(self):
+        self.backward()
         for child in self.children:
+            child.data -= self.gradient
             child._backward_recursion()
