@@ -70,8 +70,8 @@ class Value:
 
     def _backward_recursion(self, learning_rate):
         self.backward()
-        self.data -= self.gradient * learning_rate
         for child in self.children:
+            child.data -= learning_rate * child.gradient
             child._backward_recursion()
 
     def __neg__(self):
