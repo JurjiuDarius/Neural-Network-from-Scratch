@@ -45,20 +45,20 @@ class Value:
         return out
 
     def relu(self):
-        out = Value(max(0, self.data), (self))
+        out = Value(max(0, self.data), (self,))
 
         def backward():
-            self.grad += (out.data > 0) * out.grad
+            self.gradient += (out.data > 0) * out.gradient
 
         out.backward = backward
 
         return out
 
     def sigmoid(self):
-        out = Value(1 / (np.exp(-1) + 1), (self))
+        out = Value(1 / (np.exp(-1) + 1), (self,))
 
         def backward():
-            self.grad += out.data * (1 - out.data)
+            self.gradient += out.data * (1 - out.data)
 
         out.backward = backward
 
@@ -72,7 +72,7 @@ class Value:
         self.backward()
         for child in self.children:
             child.data -= learning_rate * child.gradient
-            child._backward_recursion()
+            child._backward_recursion(learning_rate)
 
     def __neg__(self):
         return self * -1
@@ -96,4 +96,4 @@ class Value:
         return other * self**-1
 
     def __repr__(self):
-        return f"Value(data={self.data}, grad={self.grad})"
+        return f"Value(data={self.data}, gradient={self.gradient})"

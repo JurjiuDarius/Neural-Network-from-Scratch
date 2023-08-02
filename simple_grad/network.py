@@ -28,14 +28,10 @@ class Layer:
         return output
 
     def parameters(self):
-        return [self.weights, self.biases]
-
-    def zero_grad(self):
-        for weight in self.weights:
-            weight.gradient = 0
-
-        for bias in self.biases:
-            bias.gradient = 0
+        weights = []
+        for neuron_weights in self.weights:
+            weights += [weight for weight in neuron_weights]
+        return weights + self.biases
 
 
 class Network:
@@ -56,10 +52,13 @@ class Network:
     def parameters(self):
         params = []
         for layer in self.layers:
-            params.append(layer.parameters())
+            params += layer.parameters()
 
         return params
 
     def zero_grad(self):
-        for layer in self.layers:
-            layer.zero_grad()
+        for parameter in self.parameters():
+            parameter.gradient = 0
+
+    def __call__(self, inputs):
+        return self.forward(inputs)
