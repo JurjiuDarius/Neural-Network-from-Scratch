@@ -2,3 +2,4 @@ images.csv
 train.csv.zip
 .ipynb_checkpoints
 .vscode
+simple_grad/__pycache__

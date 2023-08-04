@@ -1,10 +1,10 @@
-import numpy as np
+import numpy as np  # Used solely for the log and exp functions
 
 
 class Value:
     def __init__(self, data, children=()) -> None:
         self.data = data
-        self.gradient = 0
+        self.grad = 0
         self.backward = lambda: None
         self.children = children
 
@@ -14,8 +14,8 @@ class Value:
         out = Value(self.data + other.data, (self, other))
 
         def backward():
-            self.gradient += out.gradient
-            other.gradient += out.gradient
+            self.grad += out.grad
+            other.grad += out.grad
 
         out.backward = backward
         return out
@@ -26,8 +26,8 @@ class Value:
         out = Value(self.data * other.data, (self, other))
 
         def backward():
-            self.gradient += out.gradient * other.data
-            other.gradient += out.gradient * self.data
+            self.grad += out.grad * other.data
+            other.grad += out.grad * self.data
 
         out.backward = backward
         return out
@@ -38,17 +38,17 @@ class Value:
         out = Value(self.data**other.data, (self, other))
 
         def backward():
-            self.gradient += out.gradient * (self.data ** (other.data - 1)) * other.data
-            other.gradient += out.gradient * out.data * np.log(self.data)
+            self.grad += out.grad * (self.data ** (other.data - 1)) * other.data
+            other.grad += out.grad * out.data * np.log(self.data)
 
         out.backward = backward
         return out
 
     def relu(self):
-        out = Value(max(0, self.data), (self,))
+        out = Value(0 if self.data < 0 else self.data, (self,))
 
         def backward():
-            self.gradient += (out.data > 0) * out.gradient
+            self.grad += (out.data > 0) * out.grad
 
         out.backward = backward
 
@@ -58,21 +58,33 @@ class Value:
         out = Value(1 / (np.exp(-1) + 1), (self,))
 
         def backward():
-            self.gradient += out.data * (1 - out.data)
+            self.grad += out.data * (1 - out.data)
 
         out.backward = backward
 
         return out
 
-    def backprop(self, learning_rate):
-        self.gradient = 1
-        self._backward_recursion(learning_rate)
+    def backprop(self):
+        self.grad = 1
+        visited = set()
+        self._backward_recursion(visited)
 
-    def _backward_recursion(self, learning_rate):
-        self.backward()
-        for child in self.children:
-            child.data -= learning_rate * child.gradient
-            child._backward_recursion(learning_rate)
+    def _backward_recursion(self, visited):
+        topo = []
+        visited = set()
+
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v.children:
+                    build_topo(child)
+                topo.append(v)
+
+        build_topo(self)
+
+        self.grad = 1
+        for v in reversed(topo):
+            v.backward()
 
     def __neg__(self):
         return self * -1
@@ -96,4 +108,4 @@ class Value:
         return other * self**-1
 
     def __repr__(self):
-        return f"Value(data={self.data}, gradient={self.gradient})"
+        return f"Value(data={self.data}, grad={self.grad})"
