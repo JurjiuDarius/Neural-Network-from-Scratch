@@ -65,11 +65,6 @@ class Value:
         return out
 
     def backprop(self):
-        self.grad = 1
-        visited = set()
-        self._backward_recursion(visited)
-
-    def _backward_recursion(self, visited):
         topo = []
         visited = set()
 
